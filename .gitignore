@@ -1,0 +1,71 @@
+# =========================
+# Python
+# =========================
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+*.pyd
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+eggs/
+parts/
+var/
+sdist/
+develop-eggs/
+.installed.cfg
+lib/
+lib64/
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv/
+
+# =========================
+# PyCharm
+# =========================
+.idea/
+*.iws
+*.iml
+*.ipr
+
+# =========================
+# Project-specific
+# =========================
+# Downloaded MPC minutes PDFs (too large for git)
+minutes/
+data/raw/
+
+# Model cache (HuggingFace / FinBERT can be large)
+models/
+.cache/
+~/.cache/huggingface/
+
+# Processed outputs (regenerable)
+data/processed/
+outputs/
+
+# =========================
+# Environment & secrets
+# =========================
+.env
+.env.local
+*.env
+
+# =========================
+# Jupyter (if used for exploration)
+# =========================
+.ipynb_checkpoints/
+*.ipynb
+
+# =========================
+# OS
+# =========================
+.DS_Store
+Thumbs.db
+desktop.ini
