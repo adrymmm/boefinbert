@@ -38,7 +38,7 @@ ENV/
 # Project-specific
 # =========================
 # Downloaded MPC minutes PDFs (too large for git)
-minutes/
+data/minutes/
 data/raw/
 
 # Model cache (HuggingFace / FinBERT can be large)

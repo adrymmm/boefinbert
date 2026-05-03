@@ -30,7 +30,7 @@ def clean_text(text):
 
 # Process all PDFs
 records = []
-pdf_dir = Path("minutes")
+pdf_dir = Path("data/minutes")
 
 for pdf_path in sorted(pdf_dir.glob("*.pdf")):
     # Extract date from filename
@@ -51,5 +51,5 @@ for pdf_path in sorted(pdf_dir.glob("*.pdf")):
 
 # Save to CSV
 df = pd.DataFrame(records)
-df.to_csv("minutes_text.csv", index=False)
+df.to_csv("data/raw/minutes_text.csv", index=False)
 print(f"\nDone. {len(df)} documents saved to minutes_text.csv")

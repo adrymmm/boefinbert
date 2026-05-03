@@ -2,7 +2,7 @@ import requests
 import time
 from pathlib import Path
 
-Path("minutes").mkdir(exist_ok=True)
+Path("data/minutes").mkdir(exist_ok=True)
 
 base = "https://www.bankofengland.co.uk/-/media/boe/files/monetary-policy-summary-and-minutes"
 
@@ -18,7 +18,7 @@ def download_minutes(month, year):
     for url in urls_to_try:
         r = requests.get(url, headers={"User-Agent": "Mozilla/5.0"})
         if r.status_code == 200:
-            filename = f"minutes/{year}-{month}.pdf"
+            filename = f"data/minutes/{year}-{month}.pdf"
             with open(filename, "wb") as f:
                 f.write(r.content)
             print(f"✓ {year} {month}")
