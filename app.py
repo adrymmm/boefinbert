@@ -67,10 +67,29 @@ scores_df, bank_rate, breakeven_5yr = load_data()
 # Header
 st.title("Bank of England MPC Sentiment Tracker")
 st.markdown(
-    "Tracks sentiment in MPC minutes using **FinBERT**, "
-    "a BERT model specially trained on financial text. Sentiment is demeaned against "
-    "a 12-meeting rolling window so deviations reflect shifts in tone."
+    "Tracks sentiment in **Bank of England MPC minutes** using **FinBERT** "
+    "(a BERT model fine-tuned on financial text), set against the **Bank Rate** and "
+    "**5-year market-implied inflation expectations**. Sentiment is demeaned against a "
+    "12-meeting rolling window so deviations reflect shifts in tone, not absolute level."
 )
+
+with st.expander("About this dashboard"):
+    st.markdown("""
+    **What this shows.** Sentiment scores from the Bank of England's Monetary Policy 
+    Committee minutes, scored sentence-by-sentence with FinBERT and aggregated per meeting. 
+    The score is *demeaned* against a 12-meeting rolling baseline, so the y-axis shows 
+    deviations from recent norms rather than absolute values.
+
+    **Reading the chart.** When the blue line is above zero, the meeting was more positive 
+    than recent meetings; below zero, more negative. Bank Rate is overlaid on the right axis 
+    to compare tone with policy action. The bottom panel when toggled shows market-implied 
+    inflation expectations from gilt yields.
+
+    **A note on FinBERT.** FinBERT was trained on financial news and filings, not central 
+    bank communications. It captures *outlook* sentiment (good news vs. bad news) more than 
+    *policy stance* (hawkish vs. dovish). This implies that a hawkish MPC discussing recession risks may score 
+    as negative. A future iteration will add a hawkish/dovish dictionary to separate the two channels.
+    """)
 
 st.divider()
 
@@ -285,4 +304,7 @@ st.caption(
     "Data: Bank of England MPC Minutes (public domain) . "
     "Model: ProsusAI/finbert via HuggingFace . "
     "Built with Python, FinBERT, pandas, Streamlit"
+    "Built by Andreas Drymiotis ."
+    "[Github](https://github.com/adrymmm)"
+    "[LinkedIn](https://www.linkedin.com/in/andreas-drymiotes-a02293295)"
 )
