@@ -40,6 +40,7 @@ ENV/
 # Downloaded MPC minutes PDFs (too large for git)
 data/minutes/
 data/raw/
+data/processed/
 
 # Model cache (HuggingFace / FinBERT can be large)
 models/
