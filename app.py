@@ -278,6 +278,22 @@ if show_breakevens:
         dtick=0.5,
         row=2, col=1
     )
+# X-axis formatting
+xaxis_config = dict(
+    tickformat="%b %Y",
+    dtick="M12",          # tick every 12 months
+    tickangle=-45,
+    showgrid=True,
+    gridcolor="rgba(128,128,128,0.2)",
+    tickfont=dict(size=11),
+)
+
+if show_breakevens:
+    fig.update_xaxes(**xaxis_config, row=1, col=1, showticklabels=True)
+    fig.update_xaxes(**xaxis_config, title_text="", row=2, col=1, showticklabels=True)
+else:
+    fig.update_xaxes(**xaxis_config)
+
 fig.update_layout(
     legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="left", x=0, bgcolor="rgba(0,0,0,0)"),
     hovermode="x unified",
