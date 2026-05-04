@@ -1,40 +1,65 @@
 # BoE MPC Sentiment Analysis
 ## **🔗 [Live dashboard](https://boe-mpc-sentiment.streamlit.app/)**
 
-NLP sentiment analysis tool that runs **FinBERT** (a BERT model fine-tuned on financial texts)
-on Bank of England Monetary Policy Committee (MPC) minutes,
-analysing the tone of UK monetary policy communications between 2015-2026.
+NLP sentiment analysis tool that runs **FinBERT** (a BERT model fine-tuned on financial text)
+on Bank of England Monetary Policy Committee (MPC) minutes, analysing the tone of UK monetary
+policy communications between 2015 and 2026. Sentiment is plotted alongside the Bank Rate and
+5-year market-implied inflation expectations to make the relationship between MPC communication,
+policy action, and market pricing explicit.
 
-![Dashboard Screenshpt](assets/web_chart.png)
-
+![Dashboard Screenshpt](assets/web_finbert_rate.png)
+![Dashboard Screenshot](assets/web_exp_inflation.png)
 ---
 
 ## Motivation
-MPC communications are themselves policy instruments, updating expectations about growth, inflation and market pricing.
-The project aims to make the shift in tone withing those meetings quantifiable and explorable; it is plotted with the
-Bank Rate series to make the relationship explicit.
+MPC communications are themselves policy instruments -- updating expectations about growth,
+inflation, and market pricing. The project quantifies shifts in tone within MPC minutes and
+sets them against two reference series:
+
+- **Bank Rate** -- the policy outcome
+- **5-year implied inflation** -- derived from the BoE's Government Liability Curve, capturing
+  what gilt markets price for inflation over the medium term
+
+This makes it possible to ask whether sentiment leads policy, and whether market expectations
+move with the MPC's tone or independently of it.
+
 
 ---
 
 ## Features
  
-- **Net sentiment (demeaned)** — FinBERT scores aggregated per meeting, expressed as deviation from a 12-meeting rolling baseline to remove long-run drift
-- **Polarity (raw)** — direct positive minus negative score per meeting, without demeaning; reflects the absolute level of
-positivity/negativity
-- **Components view** — positive, negative, and neutral sentence shares plotted separately, showing the composition of tone rather than a single index
-- **Base rate overlay** — sentiment plotted against the official Bank Rate to visualise the relationship between language and policy
-- **Smoothing controls** — rolling average window to surface trends through meeting-to-meeting noise
-- **Date range filter** — zoom into specific episodes (GFC, Covid shock, 2021–23 inflation cycle)
+- **Net sentiment (demeaned)** -- FinBERT scores aggregated per meeting, expressed as deviation
+  from a 12-meeting rolling baseline to remove long-run drift
+- **Polarity (raw)** -- direct positive minus negative score per meeting, without demeaning;
+  reflects the absolute level of positivity/negativity
+- **Components view** -- positive, negative, and neutral sentence shares plotted separately,
+  showing the composition of tone rather than a single index
+- **Bank Rate overlay** -- sentiment plotted against the official Bank Rate on a twin axis
+- **Inflation expectations panel** -- toggleable second panel showing 5-year implied inflation
+  from the BoE's Government Liability Curve (RPI-based, derived from index-linked gilts)
+- **Smoothing controls** -- rolling average window to surface trends through meeting-to-meeting noise
+- **Date range filter** -- zoom into specific episodes (Covid shock, 2021–23 inflation cycle, etc.)
+
 ---
 
 ## Results
 ### Key findings
 
-**2022 sentiment trough** -- net sentiment hit its most negative reading in the sample during the 2022 inflation surge, coinciding with the most aggressive rate-hiking cycle in the BoE's modern history. The language turned sharply negative as CPI peaked above 11%.
+**2022 sentiment trough** -- net sentiment hit its most negative reading in the sample during
+the 2022 inflation surge, coinciding with the most aggressive rate-hiking cycle in the BoE's
+modern history. The language turned sharply negative as CPI peaked above 11%.
 
-**Sentiment leads the narrative** -- the demeaned sentiment index began deteriorating in late 2021, several meetings before the first rate rise in December 2021, consistent with the MPC signalling concern ahead of action.
+**Sentiment leads the narrative** -- the demeaned sentiment index began deteriorating in late
+2021, several meetings before the first rate rise in December 2021, consistent with the MPC
+signalling concern ahead of action.
 
-**Post-peak recovery** -- sentiment recovered through 2023–24 as inflation fell back toward target, tracking the slowdown in rate rises and eventual cuts.
+**Inflation expectations tracked policy, then decoupled** -- 5-year implied inflation rose
+sharply through 2021–22 alongside the rate-hiking cycle, peaking near 4.7% in mid-2022. After
+the BoE's most aggressive hikes, expectations fell back to ~3.5% and have since been
+relatively anchored, suggesting market confidence that the MPC would return inflation to target.
+
+**Post-peak recovery** -- sentiment recovered through 2023–24 as inflation fell back toward
+target, tracking the slowdown in rate rises and eventual cuts.
 
 ### Limitations
 
@@ -46,32 +71,27 @@ positivity/negativity
 
 ## Pipeline
  
-```
-MPC PDFs (BoE website)
-        │
-        v
-  requests (download PDFs)
-        |
-        v
-  pdfplumber (extract text + clean output)
-        │
-        v
-  FinBERT (ProsusAI/finbert via HuggingFace)
-  + positive / negative / neutral scores per sentence
-        │
-        v
-  pandas (aggregate scores -> compute meeting-level sentiment index)
-        │
-        v
-  sentiment_scores_full.csv
-        │
-        v
-  Streamlit dashboard (deployed on Streamlit Cloud)
-  + Exploration and illustration
+```mermaid
+flowchart TD
+    A[MPC PDFs<br/>BoE website] --> B[pdfplumber<br/>extract + clean]
+    B --> C[FinBERT<br/>ProsusAI/finbert]
+    C --> D[pandas<br/>meeting-level index]
+    D --> E[sentiment_scores_full.csv]
+    
+    F[BoE GLC<br/>inflation data] --> G[pd.read_excel<br/>monthly files]
+    G --> H[breakeven_5yr series]
+    
+    I[BoE Bank Rate<br/>CSV] --> J[pd.read_csv<br/>parsed datetime]
+    J --> K[bank_rate series]
+    
+    E --> L[Streamlit dashboard<br/>Streamlit Cloud]
+    H --> L
+    K --> L
 ```
 
 Model inference runs locally in [03_sentiment_analysis.ipynb](notebooks/03_sentiment_analysis.ipynb) and creates a CSV of aggregated scores.
-Streamlit reads from the CSV and creates an interactive dashboard.
+Streamlit reads from the CSV and the implied inflation Excel files to
+build the interactive dashboard.
 
 ---
 ## Repo Structure
@@ -82,7 +102,7 @@ boefinbert/
 ├── requirements.txt
 ├── README.md
 ├── src/
-│   ├── __init__.py
+│   ├── init.py
 │   ├── 01_download_minutes.py    # Fetch MPC PDFs from BoE website
 │   └── 02_extract_text.py        # PDF extraction + FinBERT scoring
 ├── notebooks/
@@ -91,11 +111,13 @@ boefinbert/
 │   ├── raw/
 │   │   ├── minutes/              # MPC PDF files
 │   │   ├── bank_rate.csv
-│   │   └── minutes_text.csv
+│   │   ├── minutes_text.csv
+│   │   └── implied_inflation/    # BoE GLC monthly Excel files
 │   └── processed/
 │       └── sentiment_scores_full.csv
 └── assets/
-    └── web_chart.png
+    └── web_finbert_rate.png
+    └── web_exp_inflation.png
 ```
 ---
 
@@ -110,7 +132,9 @@ streamlit run app.py
 ---
 
 ## Potential Extensions
-- Granger causality test: test whether MPC sentiment lead rate changes?
-- Loughran-McDonald dictionary baseline comparison
+- **Granger causality testing**: test whether MPC sentiment lead rate changes?
+- **Loughran-McDonald dictionary** baseline comparison
+- **Lead-lag analysis** - cross-correlation of sentiment with future Bank Rate changes at
+  varying lags (1, 2, 3 meetings) to identify the predictive horizon
 
 ---
