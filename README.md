@@ -7,8 +7,7 @@ policy communications between 2015 and 2026. Sentiment is plotted alongside the 
 5-year market-implied inflation expectations to make the relationship between MPC communication,
 policy action, and market pricing explicit.
 
-![Dashboard Screenshpt](assets/web_finbert_rate.png)
-![Dashboard Screenshot](assets/web_exp_inflation.png)
+![Dashboard Screenshpt](assets/web_plot.png)
 ---
 
 ## Motivation
@@ -49,11 +48,10 @@ move with the MPC's tone or independently of it.
 the 2022 inflation surge, coinciding with the most aggressive rate-hiking cycle in the BoE's
 modern history. The language turned sharply negative as CPI peaked above 11%.
 
-**Sentiment leads the narrative** -- the demeaned sentiment index began deteriorating in late
-2021, several meetings before the first rate rise in December 2021, consistent with the MPC
-signalling concern ahead of action.
+**Sentiment peaked ahead of the cycle** -- net sentiment reached its 2021 high in mid-2021 and was rolling over by the
+December 2021 hike. This signals optimism was fading across several meetings when inflation pressures ramped up.
 
-**Inflation expectations tracked policy, then decoupled** -- 5-year implied inflation rose
+**Inflation expectations responded to policy, then re-anchored** -- 5-year implied inflation rose
 sharply through 2021–22 alongside the rate-hiking cycle, peaking near 4.7% in mid-2022. After
 the BoE's most aggressive hikes, expectations fell back to ~3.5% and have since been
 relatively anchored, suggesting market confidence that the MPC would return inflation to target.
@@ -117,8 +115,7 @@ boefinbert/
 │   └── processed/
 │       └── sentiment_scores_full.csv
 └── assets/
-    └── web_finbert_rate.png
-    └── web_exp_inflation.png
+    └── web_plot.png
 ```
 ---
 
