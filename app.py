@@ -301,10 +301,10 @@ with st.expander("View underlying data"):
 # Footer
 st.divider()
 st.caption(
-    "Data: Bank of England MPC Minutes (public domain) . "
-    "Model: ProsusAI/finbert via HuggingFace . "
-    "Built with Python, FinBERT, pandas, Streamlit"
-    "Built by Andreas Drymiotis ."
-    "[Github](https://github.com/adrymmm)"
-    "[LinkedIn](https://www.linkedin.com/in/andreas-drymiotes-a02293295)"
+    "Data: Bank of England MPC Minutes (public domain) | "
+    "Model: ProsusAI/finbert via HuggingFace | "
+    "Built with Python, FinBERT, pandas, Streamlit | "
+    "Built by Andreas Drymiotis | "
+    "[Github](https://github.com/adrymmm) | "
+    "[LinkedIn](https://www.linkedin.com/in/andreas-drymiotes-a02293295) |"
 )
