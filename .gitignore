@@ -37,19 +37,20 @@ ENV/
 # =========================
 # Project-specific
 # =========================
-# Downloaded MPC minutes PDFs (too large for git)
-data/minutes/
-data/raw/
-data/processed/
-
+# Ignore the data directory by default — PDFs are too large, processed
+# outputs are regenerable from the offline pipeline.
+data/*
+# But un-ignore the specific CSVs the deployed dashboard needs.
+!data/processed/
+data/processed/*
+!data/processed/sentiment_scores_full.csv
+!data/raw/
+data/raw/*
+!data/raw/bank_rate.csv
 # Model cache (HuggingFace / FinBERT can be large)
 models/
 .cache/
 ~/.cache/huggingface/
-
-# Processed outputs (regenerable)
-data/processed/
-outputs/
 
 # =========================
 # Environment & secrets
@@ -57,12 +58,6 @@ outputs/
 .env
 .env.local
 *.env
-
-# =========================
-# Jupyter (if used for exploration)
-# =========================
-.ipynb_checkpoints/
-*.ipynb
 
 # =========================
 # OS
