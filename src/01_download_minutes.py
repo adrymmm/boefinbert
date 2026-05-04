@@ -2,7 +2,7 @@ import requests
 import time
 from pathlib import Path
 
-Path("data/minutes").mkdir(exist_ok=True)
+Path("../data/minutes").mkdir(exist_ok=True)
 
 base = "https://www.bankofengland.co.uk/-/media/boe/files/monetary-policy-summary-and-minutes"
 
