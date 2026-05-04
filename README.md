@@ -63,7 +63,8 @@ target, tracking the slowdown in rate rises and eventual cuts.
 
 ### Limitations
 
-- FinBERT was fine-tuned on financial news and filings, not central bank communications specifically (domain mismatch)
+- FinBERT captures *outlook* sentiment (good news vs. bad news) more than *policy stance* (hawkish vs. dovish). A future
+iteration could add a hawkish/dovish dictionary to separate these channels
 - Chunking at 400 characters treats all parts of the minutes equally; the opening summary and voting section likely carry different informational weight
 - Demeaning against a 12-meeting rolling window means the earliest observations have less stable baselines
 
