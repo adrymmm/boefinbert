@@ -4,54 +4,43 @@ import plotly.graph_objects as go
 from datetime import datetime
 from plotly.subplots import make_subplots
 
-# === Page config ===
+# =Config
 st.set_page_config(
     page_title="BoE MPC Sentiment Tracker",
     layout="wide"
 )
 
-# === Load data ===
+# Load data
 @st.cache_data
 def load_data():
-    month_map = {
-        "january": 1, "february": 2, "march": 3, "april": 4,
-        "may": 5, "june": 6, "july": 7, "august": 8,
-        "september": 9, "october": 10, "november": 11, "december": 12
-    }
-
     scores = pd.read_csv("data/processed/sentiment_scores_full.csv")
-    scores["date"] = scores.apply(
-        lambda row: datetime(int(row["year"]), month_map[row["month"]], 1), axis=1
-    )
+    scores["date"] = pd.to_datetime(scores["date"])
     scores = scores.sort_values("date").reset_index(drop=True)
 
-    # Demeaned sentiment (computed once; smoothing is applied later because
-    # the window is user-controlled via the sidebar slider)
+    # Demeaned sentiment
     scores["finbert_net"] = scores["positive"] - scores["negative"]
     rolling_mean = scores["finbert_net"].rolling(window=12, min_periods=6).mean()
     scores["finbert_demeaned"] = scores["finbert_net"] - rolling_mean
 
+    # Calculating polarity
     scores["finbert_polarity_raw"] = (
             (scores["positive"] - scores["negative"]) / (scores["positive"] + scores["negative"])
     )
-    # Gate against thin-opinion meetings to avoid spiky readings
+    # Gate against weakly opinionated meetings
     opinion_mass = scores["positive"] + scores["negative"]
     scores.loc[opinion_mass < 0.15, "finbert_polarity_raw"] = pd.NA
 
-    # Demean polarity on the same 12-meeting window for consistency
-    polarity_baseline = scores["finbert_polarity_raw"].rolling(window=12, min_periods=6).mean()
-    scores["finbert_polarity"] = scores["finbert_polarity_raw"] - polarity_baseline
-
     scores["opinion_mass"] = opinion_mass
 
-    # Bank rate: try 4-digit year first, fall back to 2-digit, then assert
-    # so a future format change fails loudly rather than silently dropping rows
+    # Bank rate parsing
     bank_rate = pd.read_csv("data/raw/bank_rate.csv")
     bank_rate.columns = ["date", "bank_rate"]
+    # Try 4-digit year
     parsed = pd.to_datetime(bank_rate["date"], format="%d %b %Y", errors="coerce")
     if parsed.isna().any():
+        # If 4-digit year fails try 2-digit
         parsed = pd.to_datetime(bank_rate["date"], format="%d %b %y", errors="coerce")
-    assert parsed.notna().all(), "Some bank rate dates failed to parse — check the CSV format"
+    assert parsed.notna().all(), "Some bank rate dates failed to parse"
     bank_rate["date"] = parsed
     bank_rate["bank_rate"] = pd.to_numeric(bank_rate["bank_rate"], errors="coerce")
     bank_rate = bank_rate.dropna().sort_values("date").reset_index(drop=True)
@@ -60,23 +49,23 @@ def load_data():
 
 scores_df, bank_rate = load_data()
 
-# === Header ===
+# Header
 st.title("Bank of England MPC Sentiment Tracker")
 st.markdown(
-    "Tracks hawkish/dovish sentiment in MPC minutes using **FinBERT**, "
-    "a BERT model fine-tuned on financial text. Sentiment is demeaned against "
-    "a 12-meeting rolling baseline so deviations reflect shifts in tone rather "
-    "than structural negativity in central bank language."
+    "Tracks sentiment in MPC minutes using **FinBERT**, "
+    "a BERT model specially trained on financial text. Sentiment is demeaned against "
+    "a 12-meeting rolling window so deviations reflect shifts in tone."
 )
 
 st.divider()
 
-# === Sidebar controls ===
+# Sidebar controls
 st.sidebar.header("Controls")
 
 min_date = scores_df["date"].min().date()
 max_date = scores_df["date"].max().date()
 
+# Date range filter slider
 date_range = st.sidebar.slider(
     "Date range",
     min_value=min_date,
@@ -85,6 +74,7 @@ date_range = st.sidebar.slider(
     format="YYYY"
 )
 
+# Smoothing window slider
 smoothing = st.sidebar.slider(
     "Smoothing window (meetings)",
     min_value=1,
@@ -93,6 +83,7 @@ smoothing = st.sidebar.slider(
     help="Rolling average applied to sentiment score"
 )
 
+# Change sentiment metric radio buttons
 metric = st.sidebar.radio(
     "Sentiment metric",
     options=["Net Sentiment", "Polarity", "Components"],
@@ -106,14 +97,14 @@ metric = st.sidebar.radio(
 
 show_raw = st.sidebar.checkbox("Show unsmoothed sentiment", value=True)
 
+# Opinion mass
 show_uncertainty = st.sidebar.checkbox(
     "Overlay opinion mass",
     value=False,
     help=" Sums positive and negative sentiments. Shows how opinionated each meeting was, regardless of direction. Useful for spotting contested meetings."
 )
 
-# === Compute smoothing on full series, THEN filter ===
-# Branch on the chosen metric so we smooth whichever series is being plotted.
+# Filtering for each metric
 scores_full = scores_df.copy()
 
 if metric.startswith("Net"):
@@ -139,7 +130,7 @@ filtered = scores_full[mask].copy()
 rate_mask = (bank_rate["date"].dt.date >= date_range[0]) & (bank_rate["date"].dt.date <= date_range[1])
 filtered_rate = bank_rate[rate_mask]
 
-# === Chart ===
+# Plotting
 fig = make_subplots(specs=[[{"secondary_y": True}]])
 
 if metric == "Components":
@@ -193,7 +184,7 @@ fig.add_trace(go.Scatter(
 
 fig.add_hline(y=0, line_dash="dot", line_color="grey", line_width=0.8)
 
-# === Axis ranges computed from filtered data so nothing gets clipped ===
+# Axis ranges from filtered data
 if metric == "Components":
     sent_series = pd.concat([filtered["positive"], filtered["negative"]]).dropna()
 else:
@@ -229,7 +220,7 @@ fig.update_layout(
 
 st.plotly_chart(fig, use_container_width=True)
 
-# === Data table ===
+# Data table
 with st.expander("View underlying data"):
     display_cols = ["date", "positive", "negative", "neutral",
                     "finbert_net", "finbert_demeaned",
@@ -239,10 +230,10 @@ with st.expander("View underlying data"):
         use_container_width=True
     )
 
-# === Footer ===
+# Footer
 st.divider()
 st.caption(
-    "Data: Bank of England MPC Minutes (public domain) • "
-    "Model: ProsusAI/finbert via HuggingFace • "
+    "Data: Bank of England MPC Minutes (public domain) . "
+    "Model: ProsusAI/finbert via HuggingFace . "
     "Built with Python, FinBERT, pandas, Streamlit"
 )
