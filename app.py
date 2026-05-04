@@ -45,9 +45,24 @@ def load_data():
     bank_rate["bank_rate"] = pd.to_numeric(bank_rate["bank_rate"], errors="coerce")
     bank_rate = bank_rate.dropna().sort_values("date").reset_index(drop=True)
 
-    return scores, bank_rate
+    PATH = "data/raw/implied_inflation"
 
-scores_df, bank_rate = load_data()
+    df1 = pd.read_excel(f"{PATH}/glc_inflation_monthly_1979_2015.xlsx", sheet_name=4, skiprows=3, header=0, index_col=0)
+    df2 = pd.read_excel(f"{PATH}/glc_inflation_monthly_2016_2024.xlsx", sheet_name=4, skiprows=3, header=0, index_col=0)
+    df3 = pd.read_excel(f"{PATH}/glc_inflation_monthly_2025_present.xlsx", sheet_name=4, skiprows=3, header=0,
+                        index_col=0)
+
+    breakeven = pd.concat([df1, df2, df3])
+    breakeven.index = pd.to_datetime(breakeven.index, errors="coerce")
+    breakeven = breakeven[breakeven.index.notna()]
+    breakeven = breakeven.sort_index()
+    breakeven = breakeven[~breakeven.index.duplicated(keep="first")]
+
+    breakeven_5yr = breakeven[5.0]["2015":"2026"].rename("breakeven_5yr")
+
+    return scores, bank_rate, breakeven_5yr
+
+scores_df, bank_rate, breakeven_5yr = load_data()
 
 # Header
 st.title("Bank of England MPC Sentiment Tracker")
@@ -82,6 +97,8 @@ smoothing = st.sidebar.slider(
     value=3,
     help="Rolling average applied to sentiment score"
 )
+
+show_breakevens = st.sidebar.checkbox("Show inflation expectations", value=True)
 
 # Change sentiment metric radio buttons
 metric = st.sidebar.radio(
@@ -131,7 +148,20 @@ rate_mask = (bank_rate["date"].dt.date >= date_range[0]) & (bank_rate["date"].dt
 filtered_rate = bank_rate[rate_mask]
 
 # Plotting
-fig = make_subplots(specs=[[{"secondary_y": True}]])
+if show_breakevens:
+    fig = make_subplots(
+        rows=2, cols=1,
+        shared_xaxes=True,
+        row_heights=[0.65, 0.35],
+        vertical_spacing=0.12,
+        specs=[[{"secondary_y": True}], [{"secondary_y": False}]],
+    )
+else:
+    fig = make_subplots(specs=[[{"secondary_y": True}]])
+
+if show_breakevens:
+    fig.update_annotations(font_size=12)
+top_kwargs = dict(row=1, col=1) if show_breakevens else {}
 
 if metric == "Components":
     fig.add_trace(go.Scatter(
@@ -139,13 +169,13 @@ if metric == "Components":
         mode="lines", name="Positive share",
         line=dict(color="seagreen", width=2),
         hovertemplate="<b>%{x|%b %Y}</b><br>Positive: %{y:.3f}<extra></extra>"
-    ), secondary_y=False)
+    ), secondary_y=False, **top_kwargs)
     fig.add_trace(go.Scatter(
         x=filtered["date"], y=filtered["negative"],
         mode="lines", name="Negative share",
         line=dict(color="indianred", width=2),
         hovertemplate="<b>%{x|%b %Y}</b><br>Negative: %{y:.3f}<extra></extra>"
-    ), secondary_y=False)
+    ), secondary_y=False, **top_kwargs)
 else:
     if show_raw:
         fig.add_trace(go.Scatter(
@@ -153,7 +183,7 @@ else:
             mode="lines", name=f"Unsmoothed {primary_label.lower()}",
             line=dict(color="steelblue", width=0.8), opacity=0.3,
             hovertemplate="<b>%{x|%b %Y}</b><br>Unsmoothed: %{y:.3f}<extra></extra>"
-        ), secondary_y=False)
+        ), secondary_y=False, **top_kwargs)
 
     smoothed_label = (
         primary_label if smoothing == 1
@@ -164,7 +194,7 @@ else:
         mode="lines", name=smoothed_label,
         line=dict(color="steelblue", width=2.5),
         hovertemplate="<b>%{x|%b %Y}</b><br>Sentiment: %{y:.3f}<extra></extra>"
-    ), secondary_y=False)
+    ), secondary_y=False, **top_kwargs)
 
 if show_uncertainty:
     fig.add_trace(go.Scatter(
@@ -173,16 +203,27 @@ if show_uncertainty:
         line=dict(color="orange", width=1.2, dash="dot"),
         opacity=0.6,
         hovertemplate="<b>%{x|%b %Y}</b><br>Opinion mass: %{y:.3f}<extra></extra>"
-    ), secondary_y=False)
+    ), secondary_y=False, **top_kwargs)
+
+if show_breakevens:
+    bk_mask = (breakeven_5yr.index.date >= date_range[0]) & (breakeven_5yr.index.date <= date_range[1])
+    filtered_bk = breakeven_5yr[bk_mask]
+
+    fig.add_trace(go.Scatter(
+        x=filtered_bk.index, y=filtered_bk.values,
+        mode="lines", name="5yr implied inflation (%)",
+        line=dict(color="tomato", width=2),
+        hovertemplate="<b>%{x|%b %Y}</b><br>Break-even: %{y:.2f}%<extra></extra>"
+    ), row=2, col=1)
 
 fig.add_trace(go.Scatter(
     x=filtered_rate["date"], y=filtered_rate["bank_rate"],
     mode="lines", name="Bank Rate (%)",
     line=dict(color="white", width=2, dash="dash"),
     hovertemplate="<b>%{x|%b %Y}</b><br>Bank Rate: %{y:.2f}%<extra></extra>"
-), secondary_y=True)
+), secondary_y=True, **top_kwargs)
 
-fig.add_hline(y=0, line_dash="dot", line_color="grey", line_width=0.8)
+fig.add_hline(y=0, line_dash="dot", line_color="grey", line_width=0.8, **top_kwargs)
 
 # Axis ranges from filtered data
 if metric == "Components":
@@ -206,16 +247,24 @@ if len(filtered_rate) > 0:
 else:
     rate_range = [0, 7]
 
-fig.update_yaxes(title_text=y_axis_label, range=sent_range, secondary_y=False)
-fig.update_yaxes(title_text="Bank Rate (%)", range=rate_range, showgrid=False, secondary_y=True)
+fig.update_yaxes(title_text=y_axis_label, range=sent_range, secondary_y=False, **top_kwargs)
+fig.update_yaxes(title_text="Bank Rate (%)", range=rate_range, showgrid=False, secondary_y=True, **top_kwargs)
 
+if show_breakevens:
+    bk_min, bk_max = filtered_bk.min(), filtered_bk.max()
+    bk_pad = max((bk_max - bk_min) * 0.15, 0.3)
+    fig.update_yaxes(
+        title_text="Inflation (%)",
+        range=[max(1.5, bk_min - bk_pad), bk_max + bk_pad],
+        dtick=0.5,
+        row=2, col=1
+    )
 fig.update_layout(
-    title="MPC Minutes Sentiment vs Bank Rate",
-    legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="left", x=0),
+    legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="left", x=0, bgcolor="rgba(0,0,0,0)"),
     hovermode="x unified",
-    height=550,
+    height=850 if show_breakevens else 550,
     template="plotly_dark",
-    xaxis=dict(domain=[0, 0.95])
+    margin=dict(t=80)
 )
 
 st.plotly_chart(fig, use_container_width=True)
