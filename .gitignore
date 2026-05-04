@@ -40,17 +40,20 @@ ENV/
 # Ignore the data directory by default — PDFs are too large, processed
 # outputs are regenerable from the offline pipeline.
 data/*
-# But un-ignore the specific CSVs the deployed dashboard needs.
+
 !data/processed/
 data/processed/*
 !data/processed/sentiment_scores_full.csv
+
 !data/raw/
 data/raw/*
 !data/raw/bank_rate.csv
+!data/raw/implied_inflation/
+!data/raw/implied_inflation/*.xlsx
+
 # Model cache (HuggingFace / FinBERT can be large)
 models/
 .cache/
-~/.cache/huggingface/
 
 # =========================
 # Environment & secrets
