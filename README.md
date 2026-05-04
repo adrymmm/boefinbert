@@ -7,7 +7,7 @@ policy communications between 2015 and 2026. Sentiment is plotted alongside the 
 5-year market-implied inflation expectations to make the relationship between MPC communication,
 policy action, and market pricing explicit.
 
-![Dashboard Screenshpt](assets/web_plot.png)
+![Dashboard Screenshot](assets/web_plot.png)
 ---
 
 ## Motivation
