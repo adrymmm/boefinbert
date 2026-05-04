@@ -74,6 +74,30 @@ Model inference runs locally in [03_sentiment_analysis.ipynb](notebooks/03_senti
 Streamlit reads from the CSV and creates an interactive dashboard.
 
 ---
+## Repo Structure
+
+```
+boefinbert/
+├── app.py                        # Streamlit app entry point
+├── requirements.txt
+├── README.md
+├── src/
+│   ├── __init__.py
+│   ├── 01_download_minutes.py    # Fetch MPC PDFs from BoE website
+│   └── 02_extract_text.py        # PDF extraction + FinBERT scoring
+├── notebooks/
+│   └── 03_sentiment_analysis.ipynb
+├── data/
+│   ├── raw/
+│   │   ├── minutes/              # MPC PDF files
+│   │   ├── bank_rate.csv
+│   │   └── minutes_text.csv
+│   └── processed/
+│       └── sentiment_scores_full.csv
+└── assets/
+    └── web_chart.png
+```
+---
 
 ## Running Locally
  
