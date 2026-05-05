@@ -46,15 +46,10 @@ move with the MPC's tone or independently of it.
 
 **2022 sentiment trough** -- net sentiment hit its most negative reading in the sample during
 the 2022 inflation surge, coinciding with the most aggressive rate-hiking cycle in the BoE's
-modern history. The language turned sharply negative as CPI peaked above 11%.
+modern history.
 
 **Sentiment peaked ahead of the cycle** -- net sentiment reached its 2021 high in mid-2021 and was rolling over by the
 December 2021 hike. This signals optimism was fading across several meetings when inflation pressures ramped up.
-
-**Inflation expectations responded to policy, then re-anchored** -- 5-year implied inflation rose
-sharply through 2021–22 alongside the rate-hiking cycle, peaking near 4.7% in mid-2022. After
-the BoE's most aggressive hikes, expectations fell back to ~3.5% and have since been
-relatively anchored, suggesting market confidence that the MPC would return inflation to target.
 
 **Post-peak recovery** -- sentiment recovered through 2023–24 as inflation fell back toward
 target, tracking the slowdown in rate rises and eventual cuts.
